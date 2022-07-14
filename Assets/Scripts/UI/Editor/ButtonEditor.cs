@@ -3,8 +3,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-using BehaviourType = UI.Button.BehaviourType;
-using LongClickTransition = UI.Button.LongClickTransition;
+using BehaviourType = UI.ImprovedButton.BehaviourType;
+using LongClickTransition = UI.ImprovedButton.LongClickTransition;
 
 // Code by VPDInc
 // Email: vpd-2000@yandex.ru
@@ -13,7 +13,7 @@ namespace UI.Editor
 {
     
     [CanEditMultipleObjects]
-    [CustomEditor(typeof(Button), true)]
+    [CustomEditor(typeof(ImprovedButton), true)]
     public sealed class ButtonEditor : SelectableEditor
     {
         private readonly GUIContent _transitionForLongClickLabel = new("Transition");

@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 namespace UI
 {
     [AddComponentMenu("UI/Improved button", 30)]
-    public sealed class Button : Selectable, IPointerClickHandler
+    public sealed class ImprovedButton : Selectable, IPointerClickHandler
     {
         #region Enums
         public enum BehaviourType
