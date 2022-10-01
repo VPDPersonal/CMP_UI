@@ -6,8 +6,8 @@ using System.Collections;
 using UnityEngine.EventSystems;
 
 // Code by VPDInc
-// Email: vpd-2000@yandex.ru
-// Version: 1.0 (06.06.2022)
+// Email: vpd-2000@yandex.com
+// Version: 1.0.0
 namespace UI
 {
     [AddComponentMenu("UI/Improved button", 30)]

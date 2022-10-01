@@ -11,8 +11,8 @@ using UnityEditor.SceneManagement;
 using Transition = UnityEngine.UI.Selectable.Transition;
 
 // Code by VPDInc
-// Email: vpd-2000@yandex.ru
-// Version: 1.0 (06.06.2022)
+// Email: vpd-2000@yandex.com
+// Version: 1.0.0
 namespace UI.Editor
 {
     [CustomEditor(typeof(Selectable), true)]

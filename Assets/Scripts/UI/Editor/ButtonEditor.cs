@@ -7,11 +7,10 @@ using BehaviourType = UI.ImprovedButton.BehaviourType;
 using LongClickTransition = UI.ImprovedButton.LongClickTransition;
 
 // Code by VPDInc
-// Email: vpd-2000@yandex.ru
-// Version: 1.0 (06.06.2022)
+// Email: vpd-2000@yandex.com
+// Version: 1.0.0
 namespace UI.Editor
 {
-    
     [CanEditMultipleObjects]
     [CustomEditor(typeof(ImprovedButton), true)]
     public sealed class ButtonEditor : SelectableEditor
