@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
@@ -7,29 +8,20 @@ using UnityEngine.EventSystems;
 
 // Code by VPDInc
 // Email: vpd-2000@yandex.com
-// Version: 1.0.0
-namespace UI
+// Version: 1.1.0
+namespace VPDUI
 {
     [AddComponentMenu("UI/Improved button", 30)]
     public sealed class ImprovedButton : Selectable, IPointerClickHandler
     {
-        #region Enums
-        public enum BehaviourType
+        public event UnityAction Clicked
         {
-            Click,
-            LongClick,
-            MultiClick,
+            add => _clicked.AddListener(value);
+            remove => _clicked.RemoveListener(value);
         }
         
-        public enum LongClickTransition
-        {
-            None,
-            Filling
-        }
-        #endregion
-
-        #region Inspector fields
-        [SerializeField] private BehaviourType _type;
+        #region Inspector Fields
+        [SerializeField] private Behaviour[] _behaviours;
         
         [SerializeField] private LongClickTransition _longClickTransition;
         [SerializeField] [Min(0)] private float _timeLongClick = 1;
@@ -48,36 +40,78 @@ namespace UI
         private IEnumerator _stoppingMultiClick;
         #endregion
 
-        public event UnityAction Clicked
+        #region Unity Methods
+#if UNITY_EDITOR
+        protected override void OnValidate()
         {
-            add => _clicked.AddListener(value);
-            remove => _clicked.RemoveListener(value);
+            base.OnValidate();
+            
+            var clickCount = _behaviours.Count(b => b == Behaviour.Click);
+            var longClickCount = _behaviours.Count(b => b == Behaviour.LongClick);
+            var multiClickCount = _behaviours.Count(b => b == Behaviour.MultiClick);
+
+            if (clickCount > 1)
+            {
+                if (longClickCount > 0)
+                {
+                    if (multiClickCount > 0)
+                        Array.Resize(ref _behaviours, _behaviours.Length - 1);
+                    else _behaviours[^1] = Behaviour.MultiClick;
+                }
+                else _behaviours[^1] = Behaviour.LongClick;
+            }
+
+            if (longClickCount > 1)
+            {
+                if (multiClickCount > 0)
+                {
+                    if (clickCount > 0)
+                        Array.Resize(ref _behaviours, _behaviours.Length - 1);
+                    else _behaviours[^1] = Behaviour.Click;
+                }
+                else _behaviours[^1] = Behaviour.MultiClick;
+            }
+            
+            if (multiClickCount > 1 && _behaviours.Length > 1)
+            {
+                if (longClickCount > 0)
+                {
+                    if (clickCount > 0)
+                        Array.Resize(ref _behaviours, _behaviours.Length - 1);
+                    else _behaviours[^1] = Behaviour.Click;
+                }
+                else _behaviours[^1] = Behaviour.LongClick;
+            }
         }
+#endif
 
         protected override void Awake()
         {
             base.Awake();
 
-            if (_type == BehaviourType.LongClick &&
-                _longClickTransition == LongClickTransition.Filling)
-            {
-                var graphic = (Image)targetGraphic;
-                graphic.type = Image.Type.Filled;
-                graphic.fillAmount = 0;
-            }
+            if (!ExistBehaviour(Behaviour.LongClick) ||
+                _longClickTransition != LongClickTransition.Filling) return;
+                
+            var graphic = (Image)targetGraphic;
+            graphic.type = Image.Type.Filled;
+            graphic.fillAmount = 0;
         }
+#endregion
 
-        #region Pointer functions
+        #region Pointer Methods
         public override void OnPointerDown(PointerEventData eventData)
         {
             if (!IsLeftInputButton(eventData)) return;
-            
-            switch (_type)
+
+            foreach (var behaviour in _behaviours)
             {
-                case BehaviourType.Click: base.OnPointerDown(eventData); break;
-                case BehaviourType.MultiClick: return;
-                case BehaviourType.LongClick: StartLongClick(); break;
-                default: throw new ArgumentOutOfRangeException();
+                switch (behaviour)
+                {
+                    case Behaviour.Click: base.OnPointerDown(eventData); break;
+                    case Behaviour.MultiClick: break;
+                    case Behaviour.LongClick: StartLongClick(); break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
@@ -85,12 +119,15 @@ namespace UI
         {
             if (!IsLeftInputButton(eventData)) return;
             
-            switch (_type)
+            foreach (var behaviour in _behaviours)
             {
-                case BehaviourType.Click: base.OnPointerUp(eventData); break;
-                case BehaviourType.MultiClick: return;
-                case BehaviourType.LongClick: StopLongClick(); break;
-                default: throw new ArgumentOutOfRangeException();
+                switch (behaviour)
+                {
+                    case Behaviour.Click: base.OnPointerUp(eventData); break;
+                    case Behaviour.MultiClick: break;
+                    case Behaviour.LongClick: StopLongClick(); break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
         }
         
@@ -98,17 +135,20 @@ namespace UI
         {
             if (!IsLeftInputButton(eventData)) return;
 
-            switch (_type)
+            foreach (var behaviour in _behaviours)
             {
-                case BehaviourType.LongClick: return;
-                case BehaviourType.Click: Press(); break;
-                case BehaviourType.MultiClick: PressMulti(); break;
-                default: throw new ArgumentOutOfRangeException();
+                switch (behaviour)
+                {
+                    case Behaviour.LongClick: break;
+                    case Behaviour.Click: Press(); break;
+                    case Behaviour.MultiClick: PressMulti(); break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
         }
         #endregion
 
-        #region Long press functions
+        #region Long Press Methods
         private void StartLongClick()
         {
             if (_isStartLongClick) return;
@@ -149,7 +189,7 @@ namespace UI
         }
         #endregion
 
-        #region Press multi functions
+        #region Press Multi Methods
         private void PressMulti()
         {
             _clickCount++;
@@ -215,9 +255,29 @@ namespace UI
             }
         }
 
+        #region Check Methods
+        private bool ExistBehaviour(Behaviour behaviour) =>
+            _behaviours.Any(b => b == behaviour);
+
         private bool IsCanClick() => !(!IsActive() || !IsInteractable());
 
         private static bool IsLeftInputButton(PointerEventData eventData) =>
             eventData.button == PointerEventData.InputButton.Left;
+        #endregion
+        
+        #region Enums
+        public enum Behaviour
+        {
+            Click,
+            LongClick,
+            MultiClick,
+        }
+        
+        public enum LongClickTransition
+        {
+            None,
+            Filling
+        }
+        #endregion
     }
 }

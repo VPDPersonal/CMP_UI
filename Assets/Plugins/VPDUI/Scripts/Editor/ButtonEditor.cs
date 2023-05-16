@@ -3,13 +3,13 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-using BehaviourType = UI.ImprovedButton.BehaviourType;
-using LongClickTransition = UI.ImprovedButton.LongClickTransition;
+using Behaviour = VPDUI.ImprovedButton.Behaviour;
+using LongClickTransition = VPDUI.ImprovedButton.LongClickTransition;
 
 // Code by VPDInc
 // Email: vpd-2000@yandex.com
-// Version: 1.0.0
-namespace UI.Editor
+// Version: 1.1.0
+namespace VPDUI.Editor
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(ImprovedButton), true)]
@@ -18,7 +18,7 @@ namespace UI.Editor
         private readonly GUIContent _transitionForLongClickLabel = new("Transition");
 
         #region Fields
-        private SerializedProperty _type;
+        private SerializedProperty _behaviours;
         
         private SerializedProperty _longClickTransition;
         private SerializedProperty _timeLongClick;
@@ -33,7 +33,7 @@ namespace UI.Editor
         {
             base.OnEnable();
             
-            _type = serializedObject.FindProperty(nameof(_type));
+            _behaviours = serializedObject.FindProperty(nameof(_behaviours));
             
             _longClickTransition = serializedObject.FindProperty(nameof(_longClickTransition));
             _timeLongClick = serializedObject.FindProperty(nameof(_timeLongClick));
@@ -47,17 +47,20 @@ namespace UI.Editor
         #region Draw functions
         protected override void DrawFields()
         {
-            EditorGUILayout.PropertyField(_type);
+            EditorGUILayout.PropertyField(_behaviours);
             EditorGUILayout.Space();
 
-            switch (GetClickType(_type))
+            for (var i = 0; i < _behaviours.arraySize; i++)
             {
-                case BehaviourType.Click: base.DrawFields(); break;
-                case BehaviourType.LongClick: DrawLongClick(); break;
-                case BehaviourType.MultiClick: DrawMultiClick(); break;
-                default: throw new ArgumentOutOfRangeException();
+                switch (GetClickType(_behaviours.GetArrayElementAtIndex(i)))
+                {
+                    case Behaviour.Click: base.DrawFields(); break;
+                    case Behaviour.LongClick: DrawLongClick(); break;
+                    case Behaviour.MultiClick: DrawMultiClick(); break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
-            
+
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_clicked);
         }
@@ -85,7 +88,7 @@ namespace UI.Editor
                     
             var graphic = (TargetGraphicProperty.objectReferenceValue as Graphic) ??
                 (target as Selectable)?.GetComponent<Graphic>();
-            if (graphic as Image == null)
+            if (!(graphic as Image))
                 EditorGUILayout.HelpBox("You must have a Image target in order to use a sprite swap transition.", MessageType.Warning);
         }
         #endregion
@@ -93,7 +96,7 @@ namespace UI.Editor
         private static LongClickTransition GetTransitionForLongClick(SerializedProperty transitionForLongClick) =>
             (LongClickTransition)transitionForLongClick.enumValueIndex;
         
-        private static BehaviourType GetClickType(SerializedProperty clickType) =>
-            (BehaviourType)clickType.enumValueIndex;
+        private static Behaviour GetClickType(SerializedProperty clickType) =>
+            (Behaviour)clickType.enumValueIndex;
     }
 }

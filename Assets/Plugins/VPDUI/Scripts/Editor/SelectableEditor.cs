@@ -12,8 +12,8 @@ using Transition = UnityEngine.UI.Selectable.Transition;
 
 // Code by VPDInc
 // Email: vpd-2000@yandex.com
-// Version: 1.0.0
-namespace UI.Editor
+// Version: 1.1.0
+namespace VPDUI.Editor
 {
     [CustomEditor(typeof(Selectable), true)]
     public class SelectableEditor : UnityEditor.Editor
